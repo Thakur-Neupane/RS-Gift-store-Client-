@@ -1,4 +1,3 @@
-import { toast } from "react-toastify";
 import {
   fetchUserProfile,
   postNewUser,
@@ -6,76 +5,114 @@ import {
   verifyUserLink,
   getNewAccessJWT,
   logoutUser,
+  fetchAllUsers,
 } from "./userAxios";
-import { setUser } from "./userSlice";
+import { setUser, setUsers } from "./userSlice";
 
+// Updated apiProcessWithToast function without toast
 const apiProcessWithToast = async (obj, func) => {
-  const pending = func(obj);
-  toast.promise(pending, {
-    pending: "Please wait...",
-  });
-  const respons = await pending;
-  toast[respons.status](respons.message);
-  return respons;
+  if (typeof func !== "function") {
+    throw new Error("The provided 'func' is not a function");
+  }
+
+  try {
+    const pending = func(obj);
+    const response = await pending;
+    return response;
+  } catch (error) {
+    console.error("An error occurred:", error);
+    throw error;
+  }
 };
 
-export const createNewAdminAction = async (userData) => {
-  apiProcessWithToast(userData, postNewUser);
-  // further stuff
+export const createNewAdminAction = (userData) => async (dispatch) => {
+  try {
+    const response = await apiProcessWithToast(userData, postNewUser);
+    // Handle further stuff here if needed
+    return response; // Return response if needed
+  } catch (error) {
+    console.error("Failed to create new admin:", error);
+  }
 };
 
-export const verifyUserLinkAction = async (data) => {
-  return apiProcessWithToast(data, verifyUserLink);
+export const verifyUserLinkAction = (data) => async (dispatch) => {
+  try {
+    const response = await apiProcessWithToast(data, verifyUserLink);
+    return response; // Return response if needed
+  } catch (error) {
+    console.error("Failed to verify user link:", error);
+  }
 };
 
 export const loginAdminAction = (data) => async (dispatch) => {
-  const { status, jwts } = await userLogin(data);
+  try {
+    const { status, jwts } = await userLogin(data);
 
-  if (jwts?.accessJWT && jwts?.refreshJWT) {
-    sessionStorage.setItem("accessJWT", jwts.accessJWT);
-    localStorage.setItem("refreshJWT", jwts.refreshJWT);
+    if (jwts?.accessJWT && jwts?.refreshJWT) {
+      sessionStorage.setItem("accessJWT", jwts.accessJWT);
+      localStorage.setItem("refreshJWT", jwts.refreshJWT);
 
-    dispatch(fetchUserProfileAction());
+      dispatch(fetchUserProfileAction());
+    }
+  } catch (error) {
+    console.error("Failed to login admin:", error);
   }
-
-  //  if login success
 };
 
 export const fetchUserProfileAction = () => async (dispatch) => {
-  const { status, userInfo } = await fetchUserProfile();
+  try {
+    const { status, userInfo } = await fetchUserProfile();
 
-  if (status === "success") {
-    //mount user in the redux store
-
-    dispatch(setUser(userInfo));
+    if (status === "success") {
+      dispatch(setUser(userInfo));
+    }
+  } catch (error) {
+    console.error("Failed to fetch user profile:", error);
   }
 };
 
 export const autoLoginAction = () => async (dispatch) => {
-  const accessJWT = sessionStorage.getItem("accessJWT");
-  if (accessJWT) {
-    //call get user method
-    return dispatch(fetchUserProfileAction());
-  }
-
-  const refreshJWT = localStorage.getItem("refreshJWT");
-  if (refreshJWT) {
-    // get a new access jwt then call get user method
-    const response = await getNewAccessJWT();
-
-    if (response?.accessJWT) {
-      sessionStorage.setItem("accessJWT", response.accessJWT);
-      dispatch(fetchUserProfileAction());
+  try {
+    const accessJWT = sessionStorage.getItem("accessJWT");
+    if (accessJWT) {
+      return dispatch(fetchUserProfileAction());
     }
+
+    const refreshJWT = localStorage.getItem("refreshJWT");
+    if (refreshJWT) {
+      const response = await getNewAccessJWT();
+
+      if (response?.accessJWT) {
+        sessionStorage.setItem("accessJWT", response.accessJWT);
+        dispatch(fetchUserProfileAction());
+      }
+    }
+  } catch (error) {
+    console.error("Failed to auto-login:", error);
   }
 };
 
 export const logoutUserAction = () => (dispatch) => {
-  //call api with authorization for backend log out
-  logoutUser();
-  //frontend logout
+  try {
+    logoutUser();
+    dispatch(setUser({}));
+    localStorage.removeItem("refreshJWT");
+    sessionStorage.removeItem("accessJWT");
+  } catch (error) {
+    console.error("Failed to logout user:", error);
+  }
+};
 
-  dispatch(setUser({}));
-  localStorage.removeItem("refreshJWT");
-  sessionStorage.removeItem("accessJWT");
+export const fetchAllUsersAction = () => async (dispatch) => {
+  try {
+    const response = await apiProcessWithToast({}, fetchAllUsers);
+
+    if (response.status === "success") {
+      dispatch(setUsers(response.users));
+    } else {
+      console.error("Failed to fetch users:", response.status);
+    }
+  } catch (error) {
+    console.error("Failed to fetch users:", error);
+  }
 };

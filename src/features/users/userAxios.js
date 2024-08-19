@@ -85,3 +85,14 @@ export const resetPassword = (data) => {
 
   return apiProcessor(obj);
 };
+
+// Function to fetch all users
+export const fetchAllUsers = () => {
+  const obj = {
+    url: `${userEP}/all`,
+    method: "get",
+    isPrivate: true,
+  };
+
+  return apiProcessor(obj);
+};
