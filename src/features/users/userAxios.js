@@ -96,3 +96,48 @@ export const fetchAllUsers = () => {
 
   return apiProcessor(obj);
 };
+
+// Get one user by id
+export const fetchUserById = (id) => {
+  const obj = {
+    url: `${userEP}/${id}`,
+    method: "get",
+    isPrivate: true,
+  };
+
+  return apiProcessor(obj);
+};
+
+// delete a user by id
+export const deleteUser = (id) => {
+  const obj = {
+    url: `${userEP}/${id}`,
+    method: "delete",
+    isPrivate: true,
+  };
+
+  return apiProcessor(obj);
+};
+
+export const updateUserRole = (id, role) => {
+  const obj = {
+    url: `${userEP}/${id}/role`,
+    method: "patch",
+    data: { role },
+    isPrivate: true,
+  };
+
+  return apiProcessor(obj);
+};
+
+// Update user status
+export const updateUserStatus = (id, status) => {
+  const obj = {
+    url: `${userEP}/${id}/status`,
+    method: "patch",
+    data: { status },
+    isPrivate: true,
+  };
+
+  return apiProcessor(obj);
+};

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Button, Form, Alert } from "react-bootstrap";
+import { Button, Form, Alert, InputGroup, FormControl } from "react-bootstrap";
+import { FaPlus, FaTimes } from "react-icons/fa";
 import useForm from "../../Hooks/useForm";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -27,7 +28,7 @@ const NewProduct = () => {
     salesEnd: "",
     description: "",
     shipping: "",
-    color: "",
+    color: [], // Color array
     brand: "",
     thumbnail: "", // Thumbnail URL or identifier
   });
@@ -35,6 +36,7 @@ const NewProduct = () => {
   const [images, setImages] = useState([]);
   const [thumbnail, setThumbnail] = useState(""); // Local state for thumbnail
   const [errors, setErrors] = useState({}); // State for form validation errors
+  const [newColor, setNewColor] = useState(""); // Local state for new color input
 
   const dispatch = useDispatch();
   const cats = useSelector((state) => state.catInfo.cats);
@@ -105,7 +107,7 @@ const NewProduct = () => {
       ...form,
       subCategories: form.subCatId ? [form.subCatId] : [],
       images, // Include images in form data
-      thumbnail, // Include thumbnail in form data
+      thumbnail,
     };
 
     dispatch(createNewProductAction(formData));
@@ -114,20 +116,38 @@ const NewProduct = () => {
       subCatId: "",
       name: "",
       sku: "",
-      qty: "",
+      quantity: "",
       price: "",
       salesPrice: "",
       salesStart: "",
       salesEnd: "",
       description: "",
       shipping: "",
-      color: "",
+      color: [], // Reset color array
       brand: "",
       thumbnail: "",
     });
     setImages([]); // Clear images after submit
     setThumbnail(""); // Clear thumbnail after submit
     setErrors({}); // Clear errors after submit
+    setNewColor(""); // Clear new color input after submit
+  };
+
+  const handleAddColor = () => {
+    if (newColor && !form.color.includes(newColor)) {
+      setForm((prevForm) => ({
+        ...prevForm,
+        color: [...prevForm.color, newColor],
+      }));
+      setNewColor(""); // Clear input after adding
+    }
+  };
+
+  const handleRemoveColor = (colorToRemove) => {
+    setForm((prevForm) => ({
+      ...prevForm,
+      color: prevForm.color.filter((color) => color !== colorToRemove),
+    }));
   };
 
   const catOptions = cats
@@ -179,7 +199,7 @@ const NewProduct = () => {
     },
     {
       label: "Qty",
-      name: "qty",
+      name: "quantity",
       type: "number",
       min: 1,
       required: true,
@@ -227,12 +247,6 @@ const NewProduct = () => {
       placeholder: "Yes or No",
     },
     {
-      label: "Color",
-      name: "color",
-      type: "text",
-      placeholder: "Product color",
-    },
-    {
       label: "Brand",
       name: "brand",
       type: "text",
@@ -255,22 +269,71 @@ const NewProduct = () => {
           <Alert variant="danger">{errors.salesStart}</Alert>
         )}
         {errors.salesEnd && <Alert variant="danger">{errors.salesEnd}</Alert>}
+
         {inputs.map((item, i) => {
-          return item.isSelectType ? (
-            <CustomSelect
-              key={i}
-              {...item}
-              onChange={
-                item.name === "subCatId"
-                  ? handleSubCatChange
-                  : handleCategoryChange
-              }
-              options={item.name === "subCatId" ? subCatOptions : item.options}
-            />
-          ) : (
-            <CustomInput key={i} {...item} onChange={handleOnChange} />
-          );
+          if (item.isSelectType) {
+            return (
+              <CustomSelect
+                key={i}
+                {...item}
+                onChange={
+                  item.name === "subCatId"
+                    ? handleSubCatChange
+                    : handleCategoryChange
+                }
+                options={
+                  item.name === "subCatId" ? subCatOptions : item.options
+                }
+              />
+            );
+          }
+          return <CustomInput key={i} {...item} onChange={handleOnChange} />;
         })}
+
+        <InputGroup className="mb-3 mt-3">
+          <FormControl
+            type="text"
+            placeholder="Colors Available for the"
+            value={newColor}
+            onChange={(e) => setNewColor(e.target.value)}
+          />
+          <Button
+            variant="primary"
+            onClick={handleAddColor}
+            style={{ display: "flex", alignItems: "center" }}
+          >
+            <FaPlus />
+          </Button>
+        </InputGroup>
+
+        <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+          {form.color.length > 0 && (
+            <ul>
+              {form.color.map((color, index) => (
+                <li
+                  key={index}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  {color}
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="ml-2"
+                    onClick={() => handleRemoveColor(color)}
+                    style={{ color: "red" }}
+                  >
+                    <FaTimes />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         <FileUpload
           setImages={setImages}
           images={images}

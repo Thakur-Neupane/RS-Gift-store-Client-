@@ -6,6 +6,10 @@ import {
   getNewAccessJWT,
   logoutUser,
   fetchAllUsers,
+  fetchUserById,
+  deleteUser,
+  updateUserRole,
+  updateUserStatus,
 } from "./userAxios";
 import { setUser, setUsers } from "./userSlice";
 
@@ -114,5 +118,80 @@ export const fetchAllUsersAction = () => async (dispatch) => {
     }
   } catch (error) {
     console.error("Failed to fetch users:", error);
+  }
+};
+
+export const fetchUserByIdAction = (id) => async (dispatch) => {
+  try {
+    if (!id) {
+      throw new Error("ID must be provided");
+    }
+    const { status, user } = await fetchUserById(id);
+
+    if (status === "success") {
+      dispatch(setUser(user));
+    } else {
+      console.error("Failed to fetch user:", status);
+    }
+  } catch (error) {
+    console.error("Failed to fetch user by ID:", error);
+  }
+};
+
+export const deleteUserAction = (id) => async (dispatch, getState) => {
+  try {
+    if (!id) {
+      throw new Error("ID must be provided");
+    }
+
+    const response = await deleteUser(id);
+
+    if (response.status === "success") {
+      const { userList } = getState().userInfo;
+
+      const updatedUserList = userList.filter((user) => user._id !== id);
+
+      dispatch(setUsers(updatedUserList));
+    } else {
+      console.error("Failed to delete user:", response.status);
+    }
+  } catch (error) {
+    console.error("Failed to delete user:", error);
+  }
+};
+
+export const updateUserRoleAction = (id, newRole) => async (dispatch) => {
+  try {
+    // Call the API function to update the user role
+    const response = await updateUserRole(id, newRole);
+
+    if (response?.status === "success") {
+      // Optionally, dispatch an action to update the state with the new user info
+      // dispatch(setUser(response.user)); // If needed
+      return response;
+    } else {
+      console.error("Failed to update user role:", response.message);
+      throw new Error(response.message); // Throw error to handle it in the component
+    }
+  } catch (error) {
+    console.error("Failed to update user role:", error);
+    throw error; // Throw error to handle it in the component
+  }
+};
+
+// Action to update user status
+export const updateUserStatusAction = (id, status) => async (dispatch) => {
+  try {
+    const response = await apiProcessWithToast({ status }, () =>
+      updateUserStatus(id, status)
+    );
+
+    if (response.status === "success") {
+      dispatch(setUser(response.user));
+    } else {
+      console.error("Failed to update user status:", response.message);
+    }
+  } catch (error) {
+    console.error("Failed to update user status:", error);
   }
 };

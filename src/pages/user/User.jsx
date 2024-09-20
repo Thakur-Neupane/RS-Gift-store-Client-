@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllUsersAction } from "../../features/users/userAction";
+import {
+  fetchAllUsersAction,
+  deleteUserAction, // Import the delete action
+} from "../../features/users/userAction";
 import UserCard from "../../components/cards/UserCard";
 import {
   Container,
@@ -12,10 +15,11 @@ import {
   Pagination,
   Badge,
 } from "react-bootstrap";
+import { toast } from "react-toastify";
 
 const User = () => {
   const dispatch = useDispatch();
-  const { userList } = useSelector((state) => state.userInfo);
+  const { userList, status } = useSelector((state) => state.userInfo);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,27 +49,23 @@ const User = () => {
     setFilteredUsers(filtered);
   };
 
-  const categorizeUsers = (criteria, sortByDate = false) => {
-    const categorized = filteredUsers.filter((user) => criteria(user));
-    if (sortByDate) {
-      return categorized.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      );
-    }
-    return categorized;
+  const categorizeUsers = (criteria) => {
+    return filteredUsers.filter((user) => criteria(user));
   };
 
-  // Function to handle pagination
   const paginate = (array, pageNumber, itemsPerPage) => {
     const startIndex = (pageNumber - 1) * itemsPerPage;
     return array.slice(startIndex, startIndex + itemsPerPage);
   };
 
   const admins = categorizeUsers((user) => user.role === "admin");
-  const activeUsers = categorizeUsers((user) => user.status === "active");
-  const inactiveUsers = categorizeUsers((user) => user.status === "inactive");
+  const activeUsers = categorizeUsers(
+    (user) => user.status === "active" && user.role !== "admin"
+  );
+  const inactiveUsers = categorizeUsers(
+    (user) => user.status === "inactive" && user.role !== "admin"
+  );
 
-  // Pagination for Admins, Active Users, and Inactive Users
   const paginatedAdmins = paginate(admins, currentPage, usersPerPage);
   const paginatedActiveUsers = paginate(activeUsers, currentPage, usersPerPage);
   const paginatedInactiveUsers = paginate(
@@ -74,7 +74,6 @@ const User = () => {
     usersPerPage
   );
 
-  // Pagination Logic
   const totalPagesAdmins = Math.ceil(admins.length / usersPerPage);
   const totalPagesActive = Math.ceil(activeUsers.length / usersPerPage);
   const totalPagesInactive = Math.ceil(inactiveUsers.length / usersPerPage);
@@ -83,11 +82,26 @@ const User = () => {
     setCurrentPage(pageNumber);
   };
 
-  // Handle delete functionality
-  const handleDeleteUser = (userId) => {
-    // Implement your delete logic here, e.g., dispatch a delete action
-    console.log("Deleting user with ID:", userId);
+  const handleDeleteUser = async (userId) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        await dispatch(deleteUserAction(userId));
+        toast.success("User deleted successfully.");
+        // Optionally, refetch users or update the filtered list
+        dispatch(fetchAllUsersAction()); // Re-fetch users to update the list
+      } catch (error) {
+        toast.error("Failed to delete user.");
+      }
+    }
   };
+
+  if (status === "loading") {
+    return <p>Loading...</p>;
+  }
+
+  if (status === "failed") {
+    return <p>Failed to load user details.</p>;
+  }
 
   return (
     <Container className="mt-4">
@@ -116,13 +130,13 @@ const User = () => {
                   key={user._id}
                   user={user}
                   onDelete={handleDeleteUser}
+                  style={{ backgroundColor: "lightblue" }} // Different color for Admins
                 />
               ))
             ) : (
               <p>No admins found.</p>
             )}
           </Row>
-          {/* Pagination Controls */}
           <Row className="mt-4">
             <Col xs={12}>
               <Pagination>
@@ -150,13 +164,13 @@ const User = () => {
                   key={user._id}
                   user={user}
                   onDelete={handleDeleteUser}
+                  style={{ backgroundColor: "lightgreen" }} // Different color for Active Users
                 />
               ))
             ) : (
               <p>No active users found.</p>
             )}
           </Row>
-          {/* Pagination Controls */}
           <Row className="mt-4">
             <Col xs={12}>
               <Pagination>
@@ -184,13 +198,13 @@ const User = () => {
                   key={user._id}
                   user={user}
                   onDelete={handleDeleteUser}
+                  style={{ backgroundColor: "lightcoral" }} // Different color for Inactive Users
                 />
               ))
             ) : (
               <p>No inactive users found.</p>
             )}
           </Row>
-          {/* Pagination Controls */}
           <Row className="mt-4">
             <Col xs={12}>
               <Pagination>

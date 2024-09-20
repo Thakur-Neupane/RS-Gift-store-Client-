@@ -23,6 +23,8 @@ import SubCategoryPage from "./pages/sub-category/SubCategory";
 import ProductsDashboard from "./pages/Dashboard/ProductDashboard";
 import EditProduct from "./components/forms/EditProduct";
 import ProductView from "./pages/product/ProductView";
+import UserDetails from "./pages/user/UserAction";
+import Coupon from "./pages/coupon/Coupon";
 
 function App() {
   const dispatch = useDispatch();
@@ -39,6 +41,7 @@ function App() {
         <Route path="/verify-user" element={<UserVerification />} />
         <Route path="/forget-password" element={<ForgetPassword />} />
         <Route path="admin/new" element={<Register />} />
+        <Route path="/users/:id" element={<UserDetails />} />
 
         {/* Private routes */}
         <Route
@@ -51,11 +54,13 @@ function App() {
         >
           <Route path="admin/dashboard" element={<Dashboard />} />
           <Route path="admin/categories" element={<Categories />} />
+          <Route path="admin/coupons" element={<Coupon />} />
           <Route path="admin/sub-categories" element={<SubCategoryPage />} />
           <Route path="admin/products" element={<Products />} />
           <Route path="admin/products/new" element={<NewProduct />} />
           <Route path="admin/products/view/:_id" element={<ProductView />} />
           <Route path="admin/products/edit/:_id" element={<EditProduct />} />
+
           <Route
             path="admin/products/products-dashboard"
             element={<ProductsDashboard />}

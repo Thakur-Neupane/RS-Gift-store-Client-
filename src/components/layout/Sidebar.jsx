@@ -28,7 +28,7 @@ export const Sidebar = () => {
 
         <div className="p-2">
           <Link className="nav-link" to="/admin/products/products-dashboard">
-            ProductsView
+            ProductsAction
           </Link>
         </div>
         <div className="p-2">
@@ -46,12 +46,12 @@ export const Sidebar = () => {
             Reviews
           </Link>
         </div>
-        <hr className="border border-dark shadow" />
         <div className="p-2">
-          <Link className="nav-link" to="/admin/admins">
-            Admins
+          <Link className="nav-link" to="/admin/coupons">
+            Coupons
           </Link>
         </div>
+        <hr className="border border-dark shadow" />
       </Stack>
     </div>
   );
