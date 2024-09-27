@@ -2,19 +2,12 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { getNewAccessJWT } from "../features/users/userAxios";
 
-const getAccessJWT = () => sessionStorage.getItem("accessJWT");
-const getRefreshJWT = () => localStorage.getItem("refreshJWT");
+const getAccessJWT = () => {
+  return sessionStorage.getItem("accessJWT");
+};
 
-const handleToast = async (pending, showToast) => {
-  if (showToast) {
-    toast.promise(pending, {
-      pending: "Please wait...",
-    });
-    const response = await pending;
-    toast[response.data.status](response.data.message);
-    return response;
-  }
-  return await pending;
+const getRefreshJWT = () => {
+  return localStorage.getItem("refreshJWT");
 };
 
 export const apiProcessor = async ({
@@ -31,14 +24,33 @@ export const apiProcessor = async ({
           Authorization: isRefreshJWT ? getRefreshJWT() : getAccessJWT(),
         }
       : null;
+    const pending = axios({
+      method,
+      url,
+      data,
+      headers,
+    });
 
-    const pendingRequest = axios({ method, url, data, headers });
-    const response = await handleToast(pendingRequest, showToast);
+    let response = {};
+    if (showToast) {
+      toast.promise(pending, {
+        pending: "Please wait...",
+      });
+
+      response = await pending;
+
+      toast[response.data.status](response.data.message);
+    } else {
+      response = await pending;
+    }
 
     return response.data;
   } catch (error) {
     if (error.response?.data?.message === "jwt expired") {
+      //renew the access token and call the same server again
+
       const response = await getNewAccessJWT();
+
       if (response.accessJWT) {
         sessionStorage.setItem("accessJWT", response.accessJWT);
         return apiProcessor({
@@ -57,7 +69,7 @@ export const apiProcessor = async ({
       localStorage.removeItem("refreshJWT");
     }
 
-    if (showToast) toast.error(error.message);
+    showToast && toast.error(error.message);
 
     return {
       status: "error",
