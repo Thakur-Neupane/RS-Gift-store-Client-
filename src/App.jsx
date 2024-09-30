@@ -20,7 +20,6 @@ import Orders from "./pages/order/Orders";
 import Reviews from "./pages/review/Reviews";
 import User from "./pages/user/User";
 import Profile from "./pages/user/Profile";
-import Admin from "./pages/user/Admin";
 import UserDetails from "./pages/user/UserAction";
 import SubCategoryPage from "./pages/sub-category/SubCategory";
 import Coupon from "./pages/coupon/Coupon";
@@ -73,7 +72,6 @@ function App() {
           <Route path="users" element={<User />} />
           <Route path="orders" element={<Orders />} />
           <Route path="reviews" element={<Reviews />} />
-          <Route path="admins" element={<Admin />} />
           <Route path="profile" element={<Profile />} />
         </Route>
 
