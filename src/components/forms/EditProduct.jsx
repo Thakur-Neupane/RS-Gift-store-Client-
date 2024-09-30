@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Button,
-  Form,
-  Alert,
-  Container,
-  InputGroup,
-  FormControl,
-} from "react-bootstrap";
-import { FaPlus, FaTimes } from "react-icons/fa";
+import { Button, Form, Alert, Container } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getCategoryAction,
@@ -26,18 +18,19 @@ import {
 import FileUpload from "../../components/forms/FileUpload";
 
 const EditProduct = () => {
-  const { _id } = useParams();
+  const { _id } = useParams(); // Get product ID from URL
   const dispatch = useDispatch();
 
   const [images, setImages] = useState([]);
-  const [thumbnail, setThumbnail] = useState("");
-  const [errors, setErrors] = useState({});
-  const [newColor, setNewColor] = useState("");
+  const [thumbnail, setThumbnail] = useState(""); // Local state for thumbnail
+  const [errors, setErrors] = useState({}); // State for form validation errors
 
+  // Redux state selectors
   const product = useSelector((state) => state.productInfo.product);
   const cats = useSelector((state) => state.catInfo.cats);
   const subCats = useSelector((state) => state.subCatInfo.subCats);
 
+  // Form state
   const { form, setForm, handleOnChange } = useForm({
     category: "",
     subCatId: "",
@@ -50,14 +43,19 @@ const EditProduct = () => {
     salesEnd: "",
     description: "",
     shipping: "",
-    color: [], // Color array
+    color: "",
     brand: "",
-    thumbnail: "",
+    thumbnail: "", // Thumbnail URL or identifier
   });
 
+  // Check if _id is available
   useEffect(() => {
+    console.log("Extracted _id:", _id); // Should log the actual _id value
+
     if (_id) {
-      dispatch(getOneProductAction(_id));
+      dispatch(getOneProductAction(_id)); // Dispatch action if _id is available
+    } else {
+      console.error("No _id found in URL params");
     }
   }, [dispatch, _id]);
 
@@ -65,7 +63,7 @@ const EditProduct = () => {
     if (product) {
       setForm({
         category: product.category || "",
-        subCatId: product.subCategories[0] || "",
+        subCatId: product.subCategories[0] || "", // Assuming only one subCategory
         name: product.name || "",
         sku: product.sku || "",
         qty: product.qty || "",
@@ -79,7 +77,7 @@ const EditProduct = () => {
           : "",
         description: product.description || "",
         shipping: product.shipping || "",
-        color: product.color || [], // Get colors from product
+        color: product.color || "",
         brand: product.brand || "",
         thumbnail: product.thumbnail || "",
       });
@@ -96,7 +94,7 @@ const EditProduct = () => {
 
   const handleCategoryChange = (e) => {
     const category = e.target.value;
-    setForm({ ...form, category, subCatId: "" });
+    setForm({ ...form, category, subCatId: "" }); // Reset subCatId when category changes
     if (category) {
       dispatch(getCategorySubsAction(category));
     }
@@ -105,23 +103,6 @@ const EditProduct = () => {
   const handleSubCatChange = (e) => {
     const subCatId = e.target.value;
     setForm({ ...form, subCatId });
-  };
-
-  const handleAddColor = () => {
-    if (newColor && !form.color.includes(newColor)) {
-      setForm((prevForm) => ({
-        ...prevForm,
-        color: [...prevForm.color, newColor],
-      }));
-      setNewColor(""); // Clear input after adding
-    }
-  };
-
-  const handleRemoveColor = (colorToRemove) => {
-    setForm((prevForm) => ({
-      ...prevForm,
-      color: prevForm.color.filter((color) => color !== colorToRemove),
-    }));
   };
 
   const validateForm = () => {
@@ -158,17 +139,16 @@ const EditProduct = () => {
   const handleOnSubmit = (e) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    if (!validateForm()) return; // Stop submission if validation fails
 
     const formData = {
       ...form,
-      subCategories: form.subCatId ? [form.subCatId] : [],
-      images,
-      thumbnail,
+      subCategories: form.subCatId ? [form.subCatId] : [], // Ensure it's an array
+      images, // Add images to form data
+      thumbnail, // Add thumbnail to form data
     };
-
-    dispatch(updateProductAction(_id, formData));
-    setErrors({});
+    dispatch(updateProductAction(_id, formData)); // Update product action
+    setErrors({}); // Clear errors after submit
   };
 
   const catOptions = cats
@@ -268,6 +248,12 @@ const EditProduct = () => {
       placeholder: "Yes or No",
     },
     {
+      label: "Color",
+      name: "color",
+      type: "text",
+      placeholder: "Product color",
+    },
+    {
       label: "Brand",
       name: "brand",
       type: "text",
@@ -287,7 +273,6 @@ const EditProduct = () => {
           <Alert variant="danger">{errors.salesStart}</Alert>
         )}
         {errors.salesEnd && <Alert variant="danger">{errors.salesEnd}</Alert>}
-
         {inputs.map((item, i) => {
           return item.isSelectType ? (
             <CustomSelect
@@ -299,64 +284,36 @@ const EditProduct = () => {
                   : handleCategoryChange
               }
               options={item.name === "subCatId" ? subCatOptions : item.options}
-              value={form[item.name]}
+              value={form[item.name]} // Ensure select value is controlled
             />
           ) : (
             <CustomInput
               key={i}
               {...item}
               onChange={handleOnChange}
-              value={form[item.name]}
+              value={form[item.name]} // Ensure input value is controlled
             />
           );
         })}
-
-        <InputGroup className="mb-3 mt-3">
-          <FormControl
-            type="text"
-            placeholder="Add Color"
-            value={newColor}
-            onChange={(e) => setNewColor(e.target.value)}
-          />
-          <Button variant="primary" onClick={handleAddColor}>
-            <FaPlus />
-          </Button>
-        </InputGroup>
-
-        <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
-          {form.color.length > 0 && (
-            <ul>
-              {form.color.map((color, index) => (
-                <li
-                  key={index}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginBottom: "5px",
-                  }}
-                >
-                  {color}
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleRemoveColor(color)}
-                  >
-                    <FaTimes />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
         <FileUpload
-          images={images}
           setImages={setImages}
+          images={images}
           setThumbnail={setThumbnail}
         />
-        <Button type="submit" variant="success" className="mt-3">
-          Update Product
-        </Button>
+        {thumbnail && (
+          <div className="thumbnail-preview mt-3">
+            <img
+              src={thumbnail}
+              alt="Thumbnail Preview"
+              style={{ width: "200px", height: "auto" }}
+            />
+          </div>
+        )}
+        <div className="d-grid mt-3">
+          <Button type="submit" variant="primary">
+            Update Product
+          </Button>
+        </div>
       </Form>
     </Container>
   );
