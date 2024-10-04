@@ -11,12 +11,10 @@ const LocalSearch = ({
   subCategories = [],
   type, // 'products', 'subCategories', 'categories'
 }) => {
-  // Handle search input changes
   const handleSearchChange = (e) => {
     setKeyword(e.target.value.toLowerCase());
   };
 
-  // Handle category selection changes
   const handleCategoryChange = (e) => {
     setCategoryFilter(e.target.value);
     if (type === "products") {
@@ -24,7 +22,6 @@ const LocalSearch = ({
     }
   };
 
-  // Handle subcategory selection changes
   const handleSubCategoryChange = (e) => {
     setSubCategoryFilter(e.target.value);
   };
@@ -39,7 +36,6 @@ const LocalSearch = ({
         onChange={handleSearchChange}
         style={{ width: "200px" }}
       />
-
       {type === "products" && (
         <>
           <select
@@ -55,7 +51,6 @@ const LocalSearch = ({
               </option>
             ))}
           </select>
-
           <select
             className="form-control mb-2"
             onChange={handleSubCategoryChange}
@@ -71,7 +66,6 @@ const LocalSearch = ({
           </select>
         </>
       )}
-
       {type === "subCategories" && (
         <select
           className="form-control mb-2"
