@@ -13,6 +13,11 @@ const ProductSearch = ({
   type,
   disableSubCategory,
 }) => {
+  const handleCategoryChange = (e) => {
+    setCategoryFilter(e.target.value);
+    setSubCategoryFilter(""); // Reset subcategory filter when category changes
+  };
+
   return (
     <Row className="my-3">
       <Col md={4} className="mb-3">
@@ -25,15 +30,13 @@ const ProductSearch = ({
           />
         </Form.Group>
       </Col>
+
       <Col md={4} className="mb-3">
         <Form.Group>
           <Form.Control
             as="select"
             value={categoryFilter}
-            onChange={(e) => {
-              setCategoryFilter(e.target.value);
-              setSubCategoryFilter(""); // Reset subcategory filter when category changes
-            }}
+            onChange={handleCategoryChange}
           >
             <option value="">Select Category</option>
             {categories.map((cat) => (
@@ -44,6 +47,7 @@ const ProductSearch = ({
           </Form.Control>
         </Form.Group>
       </Col>
+
       <Col md={4} className="mb-3">
         <Form.Group>
           <Form.Control
