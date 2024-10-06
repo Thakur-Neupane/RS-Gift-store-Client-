@@ -15,8 +15,9 @@ const ProductSearch = ({
 }) => {
   return (
     <Row className="my-3">
+      {/* Search input for the product name */}
       <Col md={4} className="mb-3">
-        <Form.Group>
+        <Form.Group controlId="productSearch">
           <Form.Control
             type="text"
             placeholder={`Search ${type}`}
@@ -25,14 +26,16 @@ const ProductSearch = ({
           />
         </Form.Group>
       </Col>
+
+      {/* Dropdown for category selection */}
       <Col md={4} className="mb-3">
-        <Form.Group>
+        <Form.Group controlId="categorySelect">
           <Form.Control
             as="select"
             value={categoryFilter}
             onChange={(e) => {
               setCategoryFilter(e.target.value);
-              setSubCategoryFilter(""); // Reset subcategory filter when category changes
+              setSubCategoryFilter(""); // Reset subcategory when category changes
             }}
           >
             <option value="">Select Category</option>
@@ -44,8 +47,10 @@ const ProductSearch = ({
           </Form.Control>
         </Form.Group>
       </Col>
+
+      {/* Dropdown for subcategory selection */}
       <Col md={4} className="mb-3">
-        <Form.Group>
+        <Form.Group controlId="subCategorySelect">
           <Form.Control
             as="select"
             value={subCategoryFilter}
