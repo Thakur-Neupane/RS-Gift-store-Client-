@@ -1,17 +1,14 @@
 import React from "react";
 
-const Footer = () => {
+export const Footer = () => {
   return (
     <footer className="bg-info text-light py-3">
       <div className="container position-relative">
-        <div className="curve" aria-hidden="true"></div>
+        <div className="curve"></div>
         <div className="text-center">
-          <p>Admin CMS for RS Gifting Store</p>
-          <p>Admin v3.6</p>
+          Admin CMS for RS Gifting store. Admin v3.6
         </div>
       </div>
     </footer>
   );
 };
-
-export default Footer;
