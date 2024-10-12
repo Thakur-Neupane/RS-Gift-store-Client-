@@ -8,25 +8,16 @@ const UserVerification = () => {
   const token = searchParams.get("c");
   const email = searchParams.get("e");
 
-  const [response, setResponse] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [resp, setResp] = useState({});
   const shouldCall = useRef(true);
 
   useEffect(() => {
-    const verifyLink = async () => {
-      try {
-        const data = await verifyUserLinkAction({ token, email });
-        setResponse(data);
-      } catch (err) {
-        setError("An error occurred while verifying the link.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    // Call API to verify the link
     if (shouldCall.current) {
-      verifyLink();
+      (async () => {
+        const data = await verifyUserLinkAction({ token, email });
+        setResp(data);
+      })();
       shouldCall.current = false;
     }
   }, [token, email]);
@@ -37,18 +28,16 @@ const UserVerification = () => {
         className="bg-light p-3 rounded text-center"
         style={{ width: "450px" }}
       >
-        {loading ? (
+        {resp.message ? (
+          <Alert variant={resp.status === "success" ? "success" : "danger"}>
+            {resp.message}
+          </Alert>
+        ) : (
           <>
             <Spinner animation="border" variant="primary" className="fs-1" />
-            <div>Please wait while we verify your link...</div>
+            <div>Please wait while we are verifying your link...</div>
           </>
-        ) : error ? (
-          <Alert variant="danger">{error}</Alert>
-        ) : response?.message ? (
-          <Alert variant={response.status === "success" ? "success" : "danger"}>
-            {response.message}
-          </Alert>
-        ) : null}
+        )}
       </div>
     </div>
   );
