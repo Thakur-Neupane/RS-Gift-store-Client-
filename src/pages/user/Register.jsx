@@ -1,20 +1,29 @@
-import React from "react";
-import { Button, Form, Placeholder } from "react-bootstrap";
+import React, { useEffect } from "react";
+import { Button, Form } from "react-bootstrap";
 import { CustomInput } from "../../components/common/custom-input/CustomInput";
 import useForm from "../../Hooks/useForm";
-import { createNewAdminAction } from "../../features/users/userAction";
+import { registerNewAdmin } from "../../features/users/userAction"; // Renamed for clarity
 import { toast } from "react-toastify";
 
 const Register = () => {
-  const { form, setForm, handleOnChange } = useForm({});
+  const { form, setForm, handleOnChange, resetForm } = useForm({});
 
   const handleOnSubmit = (e) => {
     e.preventDefault();
     const { confirmPassword, ...rest } = form;
+
     if (confirmPassword !== rest.password) {
-      return toast.error("Password do not match");
+      return toast.error("Passwords do not match");
     }
-    createNewAdminAction(rest);
+
+    registerNewAdmin(rest)
+      .then(() => {
+        toast.success("Admin registered successfully");
+        resetForm(); // Reset form after successful registration
+      })
+      .catch((error) => {
+        toast.error(error.message || "Registration failed");
+      });
   };
 
   const inputs = [
@@ -33,9 +42,9 @@ const Register = () => {
       placeholder: "Smith",
     },
     {
-      label: "phone",
+      label: "Phone",
       name: "phone",
-      type: "number",
+      type: "tel", // Change to 'tel' for better mobile experience
       placeholder: "0412345",
     },
     {
@@ -62,14 +71,13 @@ const Register = () => {
   ];
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100  ">
-      <div className="" style={{ width: "450px" }}>
-        <Form className="shadow-lg p-3 rounded  " onSubmit={handleOnSubmit}>
+    <div className="d-flex justify-content-center align-items-center vh-100">
+      <div style={{ width: "450px" }}>
+        <Form className="shadow-lg p-3 rounded" onSubmit={handleOnSubmit}>
           <h3>Admin Registration</h3>
-          {inputs.map((item, i) => (
-            <CustomInput key={i} {...item} onChange={handleOnChange} />
+          {inputs.map((input, index) => (
+            <CustomInput key={index} {...input} onChange={handleOnChange} />
           ))}
-
           <div className="d-grid">
             <Button type="submit">Register New Admin</Button>
           </div>
