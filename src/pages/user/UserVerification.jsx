@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, Spinner } from "react-bootstrap";
 import { useSearchParams } from "react-router-dom";
 import { verifyUserLinkAction } from "../../features/users/userAction";
@@ -8,26 +8,17 @@ const UserVerification = () => {
   const token = searchParams.get("c");
   const email = searchParams.get("e");
 
-  const [resp, setResp] = useState({ message: "", status: "" });
-  const [loading, setLoading] = useState(true);
+  const [resp, setResp] = useState({});
+  const shouldCall = useRef(true);
 
   useEffect(() => {
-    const verifyLink = async () => {
-      try {
+    // Call API to verify the link
+    if (shouldCall.current) {
+      (async () => {
         const data = await verifyUserLinkAction({ token, email });
         setResp(data);
-      } catch (error) {
-        setResp({
-          message: "An error occurred during verification.",
-          status: "error",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (token && email) {
-      verifyLink();
+      })();
+      shouldCall.current = false;
     }
   }, [token, email]);
 
@@ -37,15 +28,15 @@ const UserVerification = () => {
         className="bg-light p-3 rounded text-center"
         style={{ width: "450px" }}
       >
-        {loading ? (
+        {resp.message ? (
+          <Alert variant={resp.status === "success" ? "success" : "danger"}>
+            {resp.message}
+          </Alert>
+        ) : (
           <>
             <Spinner animation="border" variant="primary" className="fs-1" />
             <div>Please wait while we are verifying your link...</div>
           </>
-        ) : (
-          <Alert variant={resp.status === "success" ? "success" : "danger"}>
-            {resp.message}
-          </Alert>
         )}
       </div>
     </div>
