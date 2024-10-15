@@ -30,7 +30,8 @@ const Coupon = () => {
     }
   }, [error]);
 
-  const handleChange = ({ target: { name, value } }) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -38,34 +39,28 @@ const Coupon = () => {
     setFormData((prev) => ({ ...prev, expiry: date }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      await dispatch(createNewCouponAction(formData));
-      toast.success("Coupon created successfully");
-      resetForm();
-      dispatch(getAllCouponsAction());
-    } catch (err) {
-      toast.error(err.message);
-    }
+    dispatch(createNewCouponAction(formData))
+      .then(() => {
+        toast.success("Coupon created successfully");
+        setFormData({
+          name: "",
+          expiry: new Date(),
+          discount: "",
+        });
+        dispatch(getAllCouponsAction()); // Refresh coupons
+      })
+      .catch((err) => toast.error(err.message));
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      expiry: new Date(),
-      discount: "",
-    });
-  };
-
-  const handleDelete = async (couponId) => {
-    try {
-      await dispatch(deleteCouponAction(couponId));
-      toast.success("Coupon deleted successfully");
-      dispatch(getAllCouponsAction());
-    } catch (err) {
-      toast.error(err.message);
-    }
+  const handleDelete = (couponId) => {
+    dispatch(deleteCouponAction(couponId))
+      .then(() => {
+        toast.success("Coupon deleted successfully");
+        dispatch(getAllCouponsAction()); // Refresh coupons
+      })
+      .catch((err) => toast.error(err.message));
   };
 
   return (
@@ -90,7 +85,7 @@ const Coupon = () => {
               </Col>
               <Col md={4} className="mb-3">
                 <Form.Group controlId="formCouponExpiry">
-                  <Form.Label>Expiry Date</Form.Label>
+                  <p>Discount</p>
                   <DatePicker
                     selected={formData.expiry}
                     onChange={handleDateChange}
@@ -102,7 +97,7 @@ const Coupon = () => {
               </Col>
               <Col md={2} className="mb-3">
                 <Form.Group controlId="formCouponDiscount">
-                  <Form.Label>Discount (%)</Form.Label>
+                  <Form.Label>Discount</Form.Label>
                   <Form.Control
                     type="number"
                     placeholder="Enter discount percentage"
@@ -110,8 +105,6 @@ const Coupon = () => {
                     value={formData.discount}
                     onChange={handleChange}
                     required
-                    min="0"
-                    max="100"
                   />
                 </Form.Group>
               </Col>
@@ -132,7 +125,7 @@ const Coupon = () => {
                 <tr>
                   <th>Name</th>
                   <th>Expiry Date</th>
-                  <th>Discount (%)</th>
+                  <th>Discount</th>
                   <th>Actions</th>
                 </tr>
               </thead>
