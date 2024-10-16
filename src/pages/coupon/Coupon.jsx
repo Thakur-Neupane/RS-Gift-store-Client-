@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import { Container, Row, Col, Form, Button, Table } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Form,
+  Button,
+  Table,
+  Spinner,
+} from "react-bootstrap";
 import DatePicker from "react-datepicker";
 import {
   getAllCouponsAction,
@@ -26,7 +34,7 @@ const Coupon = () => {
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      toast.error(`Error: ${error}`);
     }
   }, [error]);
 
@@ -39,28 +47,51 @@ const Coupon = () => {
     setFormData((prev) => ({ ...prev, expiry: date }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(createNewCouponAction(formData))
-      .then(() => {
-        toast.success("Coupon created successfully");
-        setFormData({
-          name: "",
-          expiry: new Date(),
-          discount: "",
-        });
-        dispatch(getAllCouponsAction()); // Refresh coupons
-      })
-      .catch((err) => toast.error(err.message));
+    try {
+      await dispatch(createNewCouponAction(formData));
+      toast.success("Coupon created successfully");
+      resetForm();
+      dispatch(getAllCouponsAction()); // Refresh coupons
+    } catch (err) {
+      toast.error(`Error: ${err.message}`);
+    }
   };
 
-  const handleDelete = (couponId) => {
-    dispatch(deleteCouponAction(couponId))
-      .then(() => {
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      expiry: new Date(),
+      discount: "",
+    });
+  };
+
+  const handleDelete = async (couponId) => {
+    if (window.confirm("Are you sure you want to delete this coupon?")) {
+      try {
+        await dispatch(deleteCouponAction(couponId));
         toast.success("Coupon deleted successfully");
         dispatch(getAllCouponsAction()); // Refresh coupons
-      })
-      .catch((err) => toast.error(err.message));
+      } catch (err) {
+        toast.error(`Error: ${err.message}`);
+      }
+    }
+  };
+
+  const renderCoupons = () => {
+    return coupons.map((coupon) => (
+      <tr key={coupon._id}>
+        <td>{coupon.name}</td>
+        <td>{new Date(coupon.expiry).toLocaleDateString()}</td>
+        <td>{coupon.discount}%</td>
+        <td>
+          <Button variant="danger" onClick={() => handleDelete(coupon._id)}>
+            Delete
+          </Button>
+        </td>
+      </tr>
+    ));
   };
 
   return (
@@ -85,7 +116,7 @@ const Coupon = () => {
               </Col>
               <Col md={4} className="mb-3">
                 <Form.Group controlId="formCouponExpiry">
-                  <p>Discount</p>
+                  <Form.Label>Expiry Date</Form.Label>
                   <DatePicker
                     selected={formData.expiry}
                     onChange={handleDateChange}
@@ -118,7 +149,9 @@ const Coupon = () => {
 
           <h4 className="mb-4">Coupons List</h4>
           {loading ? (
-            <p>Loading...</p>
+            <div className="text-center">
+              <Spinner animation="border" />
+            </div>
           ) : (
             <Table striped bordered hover>
               <thead>
@@ -129,23 +162,7 @@ const Coupon = () => {
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {coupons.map((coupon) => (
-                  <tr key={coupon._id}>
-                    <td>{coupon.name}</td>
-                    <td>{new Date(coupon.expiry).toLocaleDateString()}</td>
-                    <td>{coupon.discount}%</td>
-                    <td>
-                      <Button
-                        variant="danger"
-                        onClick={() => handleDelete(coupon._id)}
-                      >
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+              <tbody>{renderCoupons()}</tbody>
             </Table>
           )}
         </Col>
