@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import {
-  Container,
-  Row,
-  Col,
-  Form,
-  Button,
-  Table,
-  Spinner,
-} from "react-bootstrap";
+import { Container, Row, Col, Form, Button, Table } from "react-bootstrap";
 import DatePicker from "react-datepicker";
 import {
   getAllCouponsAction,
@@ -47,26 +39,28 @@ const Coupon = () => {
     setFormData((prev) => ({ ...prev, expiry: date }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      await dispatch(createNewCouponAction(formData));
-      toast.success("Coupon created successfully");
-      setFormData({ name: "", expiry: new Date(), discount: "" });
-      dispatch(getAllCouponsAction());
-    } catch (err) {
-      toast.error(err.message);
-    }
+    dispatch(createNewCouponAction(formData))
+      .then(() => {
+        toast.success("Coupon created successfully");
+        setFormData({
+          name: "",
+          expiry: new Date(),
+          discount: "",
+        });
+        dispatch(getAllCouponsAction()); // Refresh coupons
+      })
+      .catch((err) => toast.error(err.message));
   };
 
-  const handleDelete = async (couponId) => {
-    try {
-      await dispatch(deleteCouponAction(couponId));
-      toast.success("Coupon deleted successfully");
-      dispatch(getAllCouponsAction());
-    } catch (err) {
-      toast.error(err.message);
-    }
+  const handleDelete = (couponId) => {
+    dispatch(deleteCouponAction(couponId))
+      .then(() => {
+        toast.success("Coupon deleted successfully");
+        dispatch(getAllCouponsAction()); // Refresh coupons
+      })
+      .catch((err) => toast.error(err.message));
   };
 
   return (
@@ -91,7 +85,7 @@ const Coupon = () => {
               </Col>
               <Col md={4} className="mb-3">
                 <Form.Group controlId="formCouponExpiry">
-                  <Form.Label>Expiry Date</Form.Label>
+                  <p>Discount</p>
                   <DatePicker
                     selected={formData.expiry}
                     onChange={handleDateChange}
@@ -103,14 +97,13 @@ const Coupon = () => {
               </Col>
               <Col md={2} className="mb-3">
                 <Form.Group controlId="formCouponDiscount">
-                  <Form.Label>Discount (%)</Form.Label>
+                  <Form.Label>Discount</Form.Label>
                   <Form.Control
                     type="number"
                     placeholder="Enter discount percentage"
                     name="discount"
                     value={formData.discount}
                     onChange={handleChange}
-                    min="0"
                     required
                   />
                 </Form.Group>
@@ -125,7 +118,7 @@ const Coupon = () => {
 
           <h4 className="mb-4">Coupons List</h4>
           {loading ? (
-            <Spinner animation="border" variant="primary" />
+            <p>Loading...</p>
           ) : (
             <Table striped bordered hover>
               <thead>
