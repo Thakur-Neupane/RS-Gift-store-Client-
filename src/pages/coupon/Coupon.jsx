@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import {
@@ -38,36 +38,48 @@ const Coupon = () => {
     }
   }, [error]);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
-  const handleDateChange = (date) => {
+  const handleDateChange = useCallback((date) => {
     setFormData((prev) => ({ ...prev, expiry: date }));
-  };
+  }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await dispatch(createNewCouponAction(formData));
-      toast.success("Coupon created successfully");
-      setFormData({ name: "", expiry: new Date(), discount: "" });
-      dispatch(getAllCouponsAction());
-    } catch (err) {
-      toast.error(err.message);
-    }
-  };
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (formData.discount < 0 || formData.discount > 100) {
+        toast.error("Discount must be between 0 and 100");
+        return;
+      }
+      try {
+        await dispatch(createNewCouponAction(formData));
+        toast.success("Coupon created successfully");
+        setFormData({ name: "", expiry: new Date(), discount: "" });
+        dispatch(getAllCouponsAction());
+      } catch (err) {
+        toast.error(err.message);
+      }
+    },
+    [dispatch, formData]
+  );
 
-  const handleDelete = async (couponId) => {
-    try {
-      await dispatch(deleteCouponAction(couponId));
-      toast.success("Coupon deleted successfully");
-      dispatch(getAllCouponsAction());
-    } catch (err) {
-      toast.error(err.message);
-    }
-  };
+  const handleDelete = useCallback(
+    async (couponId) => {
+      if (window.confirm("Are you sure you want to delete this coupon?")) {
+        try {
+          await dispatch(deleteCouponAction(couponId));
+          toast.success("Coupon deleted successfully");
+          dispatch(getAllCouponsAction());
+        } catch (err) {
+          toast.error(err.message);
+        }
+      }
+    },
+    [dispatch]
+  );
 
   return (
     <Container fluid>
@@ -111,6 +123,7 @@ const Coupon = () => {
                     value={formData.discount}
                     onChange={handleChange}
                     min="0"
+                    max="100"
                     required
                   />
                 </Form.Group>
