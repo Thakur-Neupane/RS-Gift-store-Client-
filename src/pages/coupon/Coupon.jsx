@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import {
@@ -38,7 +38,8 @@ const Coupon = () => {
     }
   }, [error]);
 
-  const handleChange = ({ target: { name, value } }) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -67,21 +68,6 @@ const Coupon = () => {
       toast.error(err.message);
     }
   };
-
-  const couponsList = useMemo(() => {
-    return coupons.map((coupon) => (
-      <tr key={coupon._id}>
-        <td>{coupon.name}</td>
-        <td>{new Date(coupon.expiry).toLocaleDateString()}</td>
-        <td>{coupon.discount}%</td>
-        <td>
-          <Button variant="danger" onClick={() => handleDelete(coupon._id)}>
-            Delete
-          </Button>
-        </td>
-      </tr>
-    ));
-  }, [coupons]);
 
   return (
     <Container fluid>
@@ -150,7 +136,23 @@ const Coupon = () => {
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>{couponsList}</tbody>
+              <tbody>
+                {coupons.map((coupon) => (
+                  <tr key={coupon._id}>
+                    <td>{coupon.name}</td>
+                    <td>{new Date(coupon.expiry).toLocaleDateString()}</td>
+                    <td>{coupon.discount}%</td>
+                    <td>
+                      <Button
+                        variant="danger"
+                        onClick={() => handleDelete(coupon._id)}
+                      >
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </Table>
           )}
         </Col>
