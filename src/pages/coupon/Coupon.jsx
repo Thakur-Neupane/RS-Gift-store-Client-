@@ -18,25 +18,12 @@ import {
 } from "../../features/coupons/couponAction";
 import "react-datepicker/dist/react-datepicker.css";
 
-const Coupon = () => {
-  const dispatch = useDispatch();
-  const { coupons, loading, error } = useSelector((state) => state.couponInfo);
-
+const CouponForm = ({ onSubmit, loading }) => {
   const [formData, setFormData] = useState({
     name: "",
     expiry: new Date(),
     discount: "",
   });
-
-  useEffect(() => {
-    dispatch(getAllCouponsAction());
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (error) {
-      toast.error(error);
-    }
-  }, [error]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -47,25 +34,131 @@ const Coupon = () => {
     setFormData((prev) => ({ ...prev, expiry: date }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+    onSubmit(formData);
+    setFormData({ name: "", expiry: new Date(), discount: "" });
+  };
+
+  return (
+    <Form onSubmit={handleSubmit} className="mb-4">
+      <Row className="align-items-center">
+        <Col md={3} className="mb-3">
+          <Form.Group controlId="formCouponName">
+            <Form.Label>Name</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter coupon name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+          </Form.Group>
+        </Col>
+        <Col md={4} className="mb-3">
+          <Form.Group controlId="formCouponExpiry">
+            <Form.Label>Expiry Date</Form.Label>
+            <DatePicker
+              selected={formData.expiry}
+              onChange={handleDateChange}
+              dateFormat="yyyy/MM/dd"
+              className="form-control"
+              required
+            />
+          </Form.Group>
+        </Col>
+        <Col md={2} className="mb-3">
+          <Form.Group controlId="formCouponDiscount">
+            <Form.Label>Discount (%)</Form.Label>
+            <Form.Control
+              type="number"
+              placeholder="Enter discount percentage"
+              name="discount"
+              value={formData.discount}
+              onChange={handleChange}
+              min="0"
+              required
+            />
+          </Form.Group>
+        </Col>
+        <Col md={3} className="mb-3">
+          <Button
+            variant="primary"
+            type="submit"
+            className="w-100"
+            disabled={loading}
+          >
+            {loading ? (
+              <Spinner size="sm" animation="border" />
+            ) : (
+              "Create Coupon"
+            )}
+          </Button>
+        </Col>
+      </Row>
+    </Form>
+  );
+};
+
+const CouponList = ({ coupons, onDelete }) => (
+  <Table striped bordered hover>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Expiry Date</th>
+        <th>Discount</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {coupons.map((coupon) => (
+        <tr key={coupon._id}>
+          <td>{coupon.name}</td>
+          <td>{new Date(coupon.expiry).toLocaleDateString()}</td>
+          <td>{coupon.discount}%</td>
+          <td>
+            <Button variant="danger" onClick={() => onDelete(coupon._id)}>
+              Delete
+            </Button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </Table>
+);
+
+const Coupon = () => {
+  const dispatch = useDispatch();
+  const { coupons, loading, error } = useSelector((state) => state.couponInfo);
+
+  useEffect(() => {
+    dispatch(getAllCouponsAction());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error("Failed to load coupons: " + error);
+    }
+  }, [error]);
+
+  const handleCreateCoupon = async (formData) => {
     try {
       await dispatch(createNewCouponAction(formData));
       toast.success("Coupon created successfully");
-      setFormData({ name: "", expiry: new Date(), discount: "" });
       dispatch(getAllCouponsAction());
     } catch (err) {
-      toast.error(err.message);
+      toast.error("Failed to create coupon: " + err.message);
     }
   };
 
-  const handleDelete = async (couponId) => {
+  const handleDeleteCoupon = async (couponId) => {
     try {
       await dispatch(deleteCouponAction(couponId));
       toast.success("Coupon deleted successfully");
       dispatch(getAllCouponsAction());
     } catch (err) {
-      toast.error(err.message);
+      toast.error("Failed to delete coupon: " + err.message);
     }
   };
 
@@ -74,86 +167,13 @@ const Coupon = () => {
       <Row>
         <Col md={12}>
           <h4 className="mb-4">Create Coupon</h4>
-          <Form onSubmit={handleSubmit} className="mb-4">
-            <Row className="align-items-center">
-              <Col md={3} className="mb-3">
-                <Form.Group controlId="formCouponName">
-                  <Form.Label>Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter coupon name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4} className="mb-3">
-                <Form.Group controlId="formCouponExpiry">
-                  <Form.Label>Expiry Date</Form.Label>
-                  <DatePicker
-                    selected={formData.expiry}
-                    onChange={handleDateChange}
-                    dateFormat="yyyy/MM/dd"
-                    className="form-control"
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={2} className="mb-3">
-                <Form.Group controlId="formCouponDiscount">
-                  <Form.Label>Discount (%)</Form.Label>
-                  <Form.Control
-                    type="number"
-                    placeholder="Enter discount percentage"
-                    name="discount"
-                    value={formData.discount}
-                    onChange={handleChange}
-                    min="0"
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3} className="mb-3">
-                <Button variant="primary" type="submit" className="w-100">
-                  Create Coupon
-                </Button>
-              </Col>
-            </Row>
-          </Form>
+          <CouponForm onSubmit={handleCreateCoupon} loading={loading} />
 
           <h4 className="mb-4">Coupons List</h4>
           {loading ? (
             <Spinner animation="border" variant="primary" />
           ) : (
-            <Table striped bordered hover>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Expiry Date</th>
-                  <th>Discount</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {coupons.map((coupon) => (
-                  <tr key={coupon._id}>
-                    <td>{coupon.name}</td>
-                    <td>{new Date(coupon.expiry).toLocaleDateString()}</td>
-                    <td>{coupon.discount}%</td>
-                    <td>
-                      <Button
-                        variant="danger"
-                        onClick={() => handleDelete(coupon._id)}
-                      >
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+            <CouponList coupons={coupons} onDelete={handleDeleteCoupon} />
           )}
         </Col>
       </Row>
