@@ -52,15 +52,11 @@ const Coupon = () => {
     try {
       await dispatch(createNewCouponAction(formData));
       toast.success("Coupon created successfully");
-      resetForm();
+      setFormData({ name: "", expiry: new Date(), discount: "" });
       dispatch(getAllCouponsAction());
     } catch (err) {
       toast.error(err.message);
     }
-  };
-
-  const resetForm = () => {
-    setFormData({ name: "", expiry: new Date(), discount: "" });
   };
 
   const handleDelete = async (couponId) => {
